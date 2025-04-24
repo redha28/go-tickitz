@@ -50,18 +50,22 @@ func main() {
 
 	auth := users.Group("/auth")
 	{
-		auth.GET("", func(ctx *gin.Context) {
+		auth.GET("/:id", func(ctx *gin.Context) {
 			loginHandler(ctx, dbClient)
 		})
-		auth.POST("", func(ctx *gin.Context) {
+		auth.POST("/:id", func(ctx *gin.Context) {
 			registerHandler(ctx, dbClient)
 		})
 	}
 	// PROFILE
 	profile := users.Group("/profile")
 	{
-		profile.GET("", getProfileHandler)
-		profile.PATCH("", updateProfileHandler)
+		profile.GET("", func(ctx *gin.Context) {
+			getProfileHandler(ctx, dbClient)
+		})
+		profile.PATCH("", func(ctx *gin.Context) {
+			updateProfileHandler(ctx, dbClient)
+		})
 	}
 	// MOVIE
 	movies := v1.Group("/movies")
@@ -188,8 +192,93 @@ func loginHandler(c *gin.Context, dbClient *pgxpool.Pool) {
 		"data": result,
 	})
 }
-func getProfileHandler(c *gin.Context)        {}
-func updateProfileHandler(c *gin.Context)     {}
+
+type ProfileRes struct {
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
+	Phone     string `json:"phone"`
+	Point     int    `json:"point"`
+	Email     string `json:"email"`
+}
+
+type UpdateProfileReq struct {
+	Firstname string `json:"firstname" binding:"required"`
+}
+
+func getProfileHandler(c *gin.Context, dbClient *pgxpool.Pool) {
+	userID := c.Param("id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "User ID is required",
+		})
+		return
+	}
+
+	query := `SELECT p.firstname, p.lastname, p.phone, p.point, a.email 
+	          FROM profile p 
+	          JOIN auth a ON p.auth_id = a.id 
+	          WHERE p.auth_id = $1`
+	var profile ProfileRes
+	if err := dbClient.QueryRow(c.Request.Context(), query, userID).Scan(&profile.Firstname, &profile.Lastname, &profile.Phone, &profile.Point, &profile.Email); err != nil {
+		if err.Error() == "no rows in result set" {
+			c.JSON(http.StatusNotFound, gin.H{
+				"msg": "Profile not found",
+			})
+			return
+		}
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg": "Terjadi kesalahan pada server",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"msg":  "Profile retrieved successfully",
+		"data": profile,
+	})
+}
+
+func updateProfileHandler(c *gin.Context, dbClient *pgxpool.Pool) {
+
+	userID := c.Param("id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "User ID is required",
+		})
+		return
+	}
+
+	var updateReq UpdateProfileReq
+	if err := c.ShouldBindJSON(&updateReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg":   "Invalid input",
+			"error": err.Error(),
+		})
+		return
+	}
+
+	query := `UPDATE profile SET firstname = $1 WHERE profile.auth_id = $2`
+	cmdTag, err := dbClient.Exec(c.Request.Context(), query, updateReq.Firstname, userID)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg": "Terjadi kesalahan pada server",
+		})
+		return
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		c.JSON(http.StatusNotFound, gin.H{
+			"msg": "Profile not found",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"msg": "Profile updated successfully",
+	})
+}
 func getMoviesHandler(c *gin.Context)         {}
 func getMovieDetailHandler(c *gin.Context)    {}
 func getPopularMoviesHandler(c *gin.Context)  {}
