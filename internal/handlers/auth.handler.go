@@ -28,9 +28,9 @@ func (a *AuthHandler) RegisterHandler(ctx *gin.Context) {
 func registerHandler(c *gin.Context, a *AuthHandler) {
 	var userReq models.UserReq
 	if err := c.ShouldBindJSON(&userReq); err != nil {
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{
-			"msg":   "Invalid input",
-			"error": err.Error(),
+			"msg": "Invalid input",
 		})
 		return
 	}
@@ -39,7 +39,7 @@ func registerHandler(c *gin.Context, a *AuthHandler) {
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg": "Terjadi kesalahan pada server",
+			"msg": "Internal server error",
 		})
 		return
 	}
@@ -51,16 +51,16 @@ func registerHandler(c *gin.Context, a *AuthHandler) {
 	}
 	c.JSON(http.StatusCreated, gin.H{
 		"msg":  "success",
-		"data": result,
+		"data": map[string]string{"email": result.Email, "role": result.Role},
 	})
 }
 
 func loginHandler(c *gin.Context, a *AuthHandler) {
 	var userReq models.UserReq
 	if err := c.ShouldBindJSON(&userReq); err != nil {
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{
-			"msg":   "Invalid input",
-			"error": err.Error(),
+			"msg": "Invalid input",
 		})
 		return
 	}
