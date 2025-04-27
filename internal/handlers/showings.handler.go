@@ -42,7 +42,21 @@ func (s *ShowingsHandler) GetShowingsHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, showings)
+	formattedShowings := make([]map[string]any, 0)
+	for _, showing := range showings {
+		formattedShowings = append(formattedShowings, map[string]any{
+			"id":          showing.ID,
+			"date":        showing.Date.Format("2006-01-02"),
+			"time":        showing.Time.Format("15:04:05"),
+			"cinemaName":  showing.CinemaName,
+			"cinemaImage": showing.CinemaImage,
+			"cityName":    showing.CityName,
+			"price":       showing.Price,
+			"movieTitle":  showing.MovieTitle,
+		})
+	}
+
+	c.JSON(http.StatusOK, formattedShowings)
 }
 
 func (s *ShowingsHandler) GetSeatsHandler(c *gin.Context) {
