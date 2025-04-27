@@ -37,7 +37,7 @@ func (u *UsersHandler) GetProfileHandler(c *gin.Context) {
 		}
 		log.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg": "Terjadi kesalahan pada server",
+			"msg": "Internal server error",
 		})
 		return
 	}
@@ -50,29 +50,29 @@ func (u *UsersHandler) GetProfileHandler(c *gin.Context) {
 func (u *UsersHandler) UpdateProfileHandler(c *gin.Context) {
 	var req models.IdParams
 	if err := c.ShouldBindUri(&req); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		log.Println(err.Error())
+		c.JSON(400, gin.H{"msg": "Invalid input"})
 		return
 	}
 	var updateReq models.UpdateProfileReq
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{
-			"msg":   "Invalid input",
-			"error": err.Error(),
+			"msg": "Invalid input",
 		})
 		return
 	}
-	query := `UPDATE profile SET firstname = $1 WHERE profile.auth_id = $2`
-	cmdTag, err := u.Exec(c.Request.Context(), query, updateReq.Firstname, req.UUID)
+	err := u.UseUpdateProfile(c.Request.Context(), req.UUID, updateReq)
 	if err != nil {
+		if err.Error() == "no fields to update" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"msg": "No fields to update",
+			})
+			return
+		}
 		log.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg": "Terjadi kesalahan pada server",
-		})
-		return
-	}
-	if cmdTag.RowsAffected() == 0 {
-		c.JSON(http.StatusNotFound, gin.H{
-			"msg": "Profile not found",
+			"msg": "Internal server error",
 		})
 		return
 	}
