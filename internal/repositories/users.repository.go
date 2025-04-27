@@ -92,3 +92,18 @@ func (u *UsersRepository) UseUpdateProfile(c context.Context, authID string, upd
 
 	return nil
 }
+
+func (u *UsersRepository) UseGetProfile(c context.Context, authID models.IdParams) (models.ProfileRes, error) {
+	query := `SELECT p.firstname, p.lastname, p.picture, p.phone, p.point, a.email
+	          FROM profile p
+	          JOIN auth a ON p.auth_id = a.id
+	          WHERE p.auth_id = $1`
+	var profile models.ProfileRes
+	if err := u.QueryRow(c, query, authID.UUID).Scan(&profile.Firstname, &profile.Lastname, &profile.Picture, &profile.Phone, &profile.Point, &profile.Email); err != nil {
+		if err.Error() == "no rows in result set" {
+			return models.ProfileRes{}, fmt.Errorf("profile not found")
+		}
+		return models.ProfileRes{}, err
+	}
+	return profile, nil
+}

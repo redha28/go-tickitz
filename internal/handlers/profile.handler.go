@@ -23,13 +23,10 @@ func (u *UsersHandler) GetProfileHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	query := `SELECT p.firstname, p.lastname, p.picture, p.phone, p.point, a.email
-	          FROM profile p
-	          JOIN auth a ON p.auth_id = a.id
-	          WHERE p.auth_id = $1`
-	var profile models.ProfileRes
-	if err := u.QueryRow(c.Request.Context(), query, req.UUID).Scan(&profile.Firstname, &profile.Lastname, &profile.Picture, &profile.Phone, &profile.Point, &profile.Email); err != nil {
-		if err.Error() == "no rows in result set" {
+
+	profile, err := u.UseGetProfile(c.Request.Context(), req)
+	if err != nil {
+		if err.Error() == "profile not found" {
 			c.JSON(http.StatusNotFound, gin.H{
 				"msg": "Profile not found",
 			})
