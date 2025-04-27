@@ -1,16 +1,23 @@
 package v1
 
-import "github.com/gin-gonic/gin"
+import (
+	handler "gotickitz/internal/handlers"
+	"gotickitz/internal/repositories"
 
-func initTransactionsRouter(v1 *gin.RouterGroup) {
+	"github.com/gin-gonic/gin"
+)
+
+func initTransactionsRouter(v1 *gin.RouterGroup, transactionRepo *repositories.TransactionsRepository) {
 
 	// TRANSACTIONS
 	transactions := v1.Group("/transactions")
+	transactionsHandler := handler.NewTransactionsHandler(transactionRepo)
 	{
 		transactions.GET("/:user_id", getTransactionsHandler)
-		transactions.POST("", createTransactionHandler)
+		transactions.POST("", transactionsHandler.CreateTransactionHandler)
 	}
 }
 
-func getTransactionsHandler(c *gin.Context)   {}
-func createTransactionHandler(c *gin.Context) {}
+func getTransactionsHandler(c *gin.Context) {}
+
+// func createTransactionHandler(c *gin.Context) {}
