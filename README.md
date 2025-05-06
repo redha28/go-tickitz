@@ -2,6 +2,10 @@
 
 <p align="center" style="display: flex; justify-content: center; align-items: center; gap: 20px;">
   <img src="https://raw.githubusercontent.com/gin-gonic/logo/master/color.png" width="150" alt="Gin Framework Logo">
+<<<<<<< HEAD
+=======
+  <br>
+>>>>>>> 741e9273ecf356e2b26541a07124944694d168bb
   <img src="https://jogjacodinghouse.com/wp-content/uploads/2023/01/golang.png" width="150" alt="Go Logo">
 </p>
 
@@ -120,5 +124,10 @@ To run in development mode with hot reload, install [Fresh](https://github.com/g
 fresh
 ```
 ## API Documentation
+<<<<<<< HEAD
 ## API Documentation
 For detailed API documentation, please refer to the API documentation (not included in this repository).For detailed API documentation, please refer to the API documentation (not included in this repository).
+=======
+
+For detailed API documentation, please refer to the API documentation (not included in this repository).
+>>>>>>> 741e9273ecf356e2b26541a07124944694d168bb
