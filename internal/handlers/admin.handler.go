@@ -3,6 +3,7 @@ package handler
 import (
 	"gotickitz/internal/models"
 	"gotickitz/internal/repositories"
+	"gotickitz/pkg"
 	"log"
 	"net/http"
 	"strconv"
@@ -21,6 +22,8 @@ func NewAdminHandler(adminRepo *repositories.AdminRepository) *AdminHandler {
 
 func (a *AdminHandler) CreateMovieHandler(ctx *gin.Context) {
 	var movieReq models.AdminCreateMovieReq
+	payloads, _ := ctx.Get("payloads")
+	userPayload := payloads.(*pkg.Payload)
 	if err := ctx.ShouldBindJSON(&movieReq); err != nil {
 		log.Println(err.Error())
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input"})
@@ -33,18 +36,17 @@ func (a *AdminHandler) CreateMovieHandler(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input"})
 		return
 	}
-
-	isAdmin, err := a.UseCheckAdmin(ctx.Request.Context(), movieReq.CreatedBy)
-	if err != nil {
-		log.Println(err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
-		return
-	}
-	if !isAdmin {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "Only admin can create movie"})
-		return
-	}
-	err = a.UseCreateMovie(ctx.Request.Context(), movieReq)
+	// isAdmin, err := a.UseCheckAdmin(ctx.Request.Context(), userPayload.Id)
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+	// 	return
+	// }
+	// if !isAdmin {
+	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"message": "Only admin can create movie"})
+	// 	return
+	// }
+	err = a.UseCreateMovie(ctx.Request.Context(), movieReq, userPayload.Id)
 	if err != nil {
 		log.Println(err.Error())
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
@@ -63,16 +65,6 @@ func (a *AdminHandler) UpdateMovieHandler(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&movieReq); err != nil {
 		log.Println(err.Error())
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input"})
-		return
-	}
-	isAdmin, err := a.UseCheckAdmin(ctx.Request.Context(), movieReq.CreatedBy)
-	if err != nil {
-		log.Println(err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
-		return
-	}
-	if !isAdmin {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "Only admin can update movie"})
 		return
 	}
 	idMovieInt, err := strconv.Atoi(idMovie)
@@ -110,17 +102,8 @@ func (a *AdminHandler) DeleteMovieHandler(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input"})
 		return
 	}
-	isAdmin, err := a.UseCheckAdmin(ctx.Request.Context(), movieReq.AdminId)
-	if err != nil {
-		log.Println(err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
-		return
-	}
-	if !isAdmin {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "Only admin can delete movie"})
-		return
-	}
-	err = a.UseDeleteMovie(ctx.Request.Context(), movieReq)
+
+	err := a.UseDeleteMovie(ctx.Request.Context(), movieReq)
 	if err != nil {
 		log.Println(err.Error())
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
