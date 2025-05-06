@@ -13,6 +13,7 @@ func initMoviesRouter(v1 *gin.RouterGroup, moviesRepo *repositories.MoviesReposi
 	moviesHandler := handler.NewMoviesHandler(moviesRepo)
 	{
 		movies.GET("", moviesHandler.GetMoviesHandler)
+		// :id is the movie id
 		movies.GET("/:id", moviesHandler.GetMovieDetailHandler)
 	}
 }
