@@ -3,6 +3,8 @@ package handler
 import (
 	"gotickitz/internal/models"
 	"gotickitz/internal/repositories"
+	"gotickitz/internal/utils"
+	"gotickitz/pkg"
 	"log"
 	"net/http"
 
@@ -18,13 +20,9 @@ func NewUsersHandler(usersRepo *repositories.UsersRepository) *UsersHandler {
 }
 
 func (u *UsersHandler) GetProfileHandler(c *gin.Context) {
-	var req models.IdParams
-	if err := c.ShouldBindUri(&req); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	profile, err := u.UseGetProfile(c.Request.Context(), req)
+	payloads, _ := c.Get("payloads")
+	userPayload := payloads.(*pkg.Payload)
+	profile, err := u.UseGetProfile(c.Request.Context(), userPayload.Id)
 	if err != nil {
 		if err.Error() == "profile not found" {
 			c.JSON(http.StatusNotFound, gin.H{
@@ -45,21 +43,44 @@ func (u *UsersHandler) GetProfileHandler(c *gin.Context) {
 }
 
 func (u *UsersHandler) UpdateProfileHandler(c *gin.Context) {
-	var req models.IdParams
-	if err := c.ShouldBindUri(&req); err != nil {
-		log.Println(err.Error())
-		c.JSON(400, gin.H{"msg": "Invalid input"})
-		return
-	}
+	payloads, _ := c.Get("payloads")
+	userPayload := payloads.(*pkg.Payload)
 	var updateReq models.UpdateProfileReq
-	if err := c.ShouldBindJSON(&updateReq); err != nil {
+	if err := c.ShouldBind(&updateReq); err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg": "Invalid input",
 		})
 		return
 	}
-	err := u.UseUpdateProfile(c.Request.Context(), req.UUID, updateReq)
+	file := updateReq.Picture
+	var filename string
+	if file != nil {
+		var err error
+		oldFilename, err := u.UseGetProfile(c.Request.Context(), userPayload.Id)
+		if err != nil {
+			if err.Error() == "profile not found" {
+				c.JSON(http.StatusNotFound, gin.H{
+					"msg": "Profile not found",
+				})
+				return
+			}
+			log.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"msg": "Internal server error",
+			})
+			return
+		}
+		utils := utils.InitUtils()
+		filename, _, err = utils.FileHandling(c, file, userPayload, oldFilename.Picture)
+		if err != nil {
+			log.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Terjadi kesalahan upload",
+			})
+		}
+	}
+	err := u.UseUpdateProfile(c.Request.Context(), userPayload.Id, updateReq, filename)
 	if err != nil {
 		if err.Error() == "no fields to update" {
 			c.JSON(http.StatusBadRequest, gin.H{
