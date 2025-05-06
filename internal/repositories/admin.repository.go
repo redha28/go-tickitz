@@ -8,14 +8,16 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type AdminRepository struct {
 	*pgxpool.Pool
+	*redis.Client
 }
 
-func NewAdminRepository(pg *pgxpool.Pool) *AdminRepository {
-	return &AdminRepository{pg}
+func NewAdminRepository(pg *pgxpool.Pool, rdb *redis.Client) *AdminRepository {
+	return &AdminRepository{pg, rdb}
 }
 
 func (a *AdminRepository) UseCheckAdmin(ctx context.Context, uuid string) (bool, error) {
@@ -32,11 +34,11 @@ func (a *AdminRepository) UseCheckAdmin(ctx context.Context, uuid string) (bool,
 	return false, nil
 }
 
-func (a *AdminRepository) UseCreateMovie(ctx context.Context, movieReq models.AdminCreateMovieReq) error {
+func (a *AdminRepository) UseCreateMovie(ctx context.Context, movieReq models.AdminCreateMovieReq, AdminId string) error {
 	query := "INSERT INTO movies (title, image, banner, release, synopsis, duration, director, rating, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id;"
 
 	var movieID int
-	err := a.QueryRow(ctx, query, movieReq.Title, movieReq.Image, movieReq.Banner, movieReq.Release, movieReq.Synopsis, movieReq.Duration, movieReq.Director, movieReq.Rating, movieReq.CreatedBy).Scan(&movieID)
+	err := a.QueryRow(ctx, query, movieReq.Title, movieReq.Image, movieReq.Banner, movieReq.Release, movieReq.Synopsis, movieReq.Duration, movieReq.Director, movieReq.Rating, AdminId).Scan(&movieID)
 	if err != nil {
 		return err
 	}
@@ -100,6 +102,8 @@ func (a *AdminRepository) UseEditMovie(ctx context.Context, movieReq models.Admi
 		return "", err
 	}
 
+	a.FlushDB(ctx)
+
 	return "", nil
 }
 
@@ -140,6 +144,8 @@ func (a *AdminRepository) UseEditMovieGenre(ctx context.Context, movieID int, ge
 		return err
 	}
 
+	a.FlushDB(ctx)
+
 	return nil
 }
 
@@ -153,6 +159,8 @@ func (a *AdminRepository) UseDeleteMovie(ctx context.Context, movieReq models.Ad
 	if _, err := a.Exec(ctx, query, movieReq.MoviesID); err != nil {
 		return err
 	}
+
+	a.FlushDB(ctx)
 
 	return nil
 }
