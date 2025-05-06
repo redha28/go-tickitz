@@ -13,6 +13,7 @@ func initShowingsRouter(v1 *gin.RouterGroup, showingRepo *repositories.ShowingsR
 	showingsHandler := handler.NewShowingsHandler(showingRepo)
 	{
 		showings.GET("", showingsHandler.GetShowingsHandler)
+		// :id is showing id
 		showings.GET("/:id/seat", showingsHandler.GetSeatsHandler)
 	}
 }
