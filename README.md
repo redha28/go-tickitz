@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/gin-gonic/logo/master/color.png" width="150" alt="Gin Framework Logo">
   <br>
-  <img src="https://golang.org/lib/godoc/images/go-logo-blue.svg" width="150" alt="Go Logo">
+  <img src="https://jogjacodinghouse.com/wp-content/uploads/2023/01/golang.png" width="150" alt="Go Logo">
 </p>
 
 [![Go Version](https://img.shields.io/badge/Go-v1.21+-blue.svg)](https://golang.org/doc/devel/release.html)
