@@ -19,17 +19,17 @@ func NewUsersRepository(pg *pgxpool.Pool) *UsersRepository {
 	return &UsersRepository{pg}
 }
 
-func (auth *UsersRepository) UseLogin(c context.Context, email, password string) (models.UserRes, error) {
-	query := `SELECT email, "role" FROM auth WHERE email = $1 AND "password" = $2`
-	values := []any{email, password}
+func (auth *UsersRepository) UseLogin(c context.Context, email string) (models.UserRes, error) {
+	query := `SELECT id, email, "role", password FROM auth WHERE email = $1`
+	values := []any{email}
 	var result models.UserRes
-	if err := auth.QueryRow(c, query, values...).Scan(&result.Email, &result.Role); err != nil && err != pgx.ErrNoRows {
+	if err := auth.QueryRow(c, query, values...).Scan(&result.AuthID, &result.Email, &result.Role, &result.Pass); err != nil && err != pgx.ErrNoRows {
 		return models.UserRes{}, err
 	}
 	return result, nil
 }
 
-func (auth *UsersRepository) UseRegister(c context.Context, userReq models.UserReq) (models.UserRes, models.UserRes, error) {
+func (auth *UsersRepository) UseRegister(c context.Context, userReq models.UserReq, hashedPass string) (models.UserRes, models.UserRes, error) {
 	queryCheckMail := `SELECT email FROM auth WHERE email = $1`
 	valuesMail := []any{userReq.Email}
 	var findUser models.UserRes
@@ -41,7 +41,7 @@ func (auth *UsersRepository) UseRegister(c context.Context, userReq models.UserR
 	}
 
 	query := `INSERT INTO auth (email, "password") VALUES ($1, $2) RETURNING email, "role", id;`
-	values := []any{userReq.Email, userReq.Password}
+	values := []any{userReq.Email, hashedPass}
 	var result models.UserRes
 	if err := auth.QueryRow(c, query, values...).Scan(&result.Email, &result.Role, &result.AuthID); err != nil {
 		return models.UserRes{}, models.UserRes{}, err
@@ -57,7 +57,7 @@ func (auth *UsersRepository) UseRegister(c context.Context, userReq models.UserR
 	return result, models.UserRes{}, nil
 }
 
-func (u *UsersRepository) UseUpdateProfile(c context.Context, authID string, updateReq models.UpdateProfileReq) error {
+func (u *UsersRepository) UseUpdateProfile(c context.Context, authID string, updateReq models.UpdateProfileReq, filename string) error {
 	query := `UPDATE profile SET`
 	var updates []string
 	var values []any
@@ -74,9 +74,9 @@ func (u *UsersRepository) UseUpdateProfile(c context.Context, authID string, upd
 		updates = append(updates, "phone = $"+strconv.Itoa(len(values)+1))
 		values = append(values, updateReq.Phone)
 	}
-	if updateReq.Picture != "" {
+	if filename != "" {
 		updates = append(updates, "picture = $"+strconv.Itoa(len(values)+1))
-		values = append(values, updateReq.Picture)
+		values = append(values, filename)
 	}
 
 	if len(updates) == 0 {
@@ -93,13 +93,13 @@ func (u *UsersRepository) UseUpdateProfile(c context.Context, authID string, upd
 	return nil
 }
 
-func (u *UsersRepository) UseGetProfile(c context.Context, authID models.IdParams) (models.ProfileRes, error) {
+func (u *UsersRepository) UseGetProfile(c context.Context, authID string) (models.ProfileRes, error) {
 	query := `SELECT p.firstname, p.lastname, p.picture, p.phone, p.point, a.email
 	          FROM profile p
 	          JOIN auth a ON p.auth_id = a.id
 	          WHERE p.auth_id = $1`
 	var profile models.ProfileRes
-	if err := u.QueryRow(c, query, authID.UUID).Scan(&profile.Firstname, &profile.Lastname, &profile.Picture, &profile.Phone, &profile.Point, &profile.Email); err != nil {
+	if err := u.QueryRow(c, query, authID).Scan(&profile.Firstname, &profile.Lastname, &profile.Picture, &profile.Phone, &profile.Point, &profile.Email); err != nil {
 		if err.Error() == "no rows in result set" {
 			return models.ProfileRes{}, fmt.Errorf("profile not found")
 		}
