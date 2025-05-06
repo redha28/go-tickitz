@@ -19,3 +19,13 @@ type ReqMetaMovies struct {
 	Limit  int `json:"limit"`
 	Offset int `json:"offset"`
 }
+
+type Meta struct {
+	Page       int `json:"page"`
+	TotalPages int `json:"total_pages"`
+}
+
+type RedistMovies struct {
+	Movies []Movies `json:"movies"`
+	Meta   Meta     `json:"meta"`
+}
