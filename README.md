@@ -1,8 +1,14 @@
 # GoTickitz 🎬
 
+<br />
+<br />
+
 <div align="center">
   <img src="./assets/logo.svg" alt="Logo" width="200" />
 </div>
+
+<br />
+<br />
 
 [![Go Version](https://img.shields.io/badge/Go-v1.21+-blue.svg)](https://golang.org/doc/devel/release.html)
 [![Gin](https://img.shields.io/badge/Gin-v1.9.0+-00ADD8.svg)](https://github.com/gin-gonic/gin)
