@@ -20,7 +20,8 @@ func main() {
 		log.Println("DB connection closed")
 		pg.Close()
 	}()
-	router := routes.InitRouter(pg)
+	rdb := pkg.RedisConnect()
+	router := routes.InitRouter(pg, rdb)
 
 	router.Run("localhost:8080")
 }
