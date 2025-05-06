@@ -1,9 +1,8 @@
 # GoTickitz 🎬
 
-<p align="center">
+<p align="center" style="display: flex; justify-content: center; align-items: center; gap: 20px;">
   <img src="https://raw.githubusercontent.com/gin-gonic/logo/master/color.png" width="150" alt="Gin Framework Logo">
-  <br>
-  <img src="https://golang.org/lib/godoc/images/go-logo-blue.svg" width="150" alt="Go Logo">
+  <img src="https://jogjacodinghouse.com/wp-content/uploads/2023/01/golang.png" width="150" alt="Go Logo">
 </p>
 
 [![Go Version](https://img.shields.io/badge/Go-v1.21+-blue.svg)](https://golang.org/doc/devel/release.html)
@@ -95,31 +94,31 @@ gotickitz/
    JWT_ISSUER=your_issuer
    ```
 3. Set up the PostgreSQL database and run the migrations
+3. Set up the PostgreSQL database and run the migrations
 4. Start the Redis server
 5. Run the application:
-   ```
+   ```run cmd/main.go
    go run cmd/main.go
    ```
-
 ## Features
-
+## Features
 - JWT-based authentication system
+- JWT-based authentication system/admin)
 - Role-based access control (user/admin)
-- Image upload for user profiles
+- Image upload for user profiles, and status (upcoming, popular)
 - Movie filtering by name, genre, and status (upcoming, popular)
 - Seat selection with availability checking
-- Transaction history
-- Points system for users
+- Transaction historysers
+- Points system for usersently accessed data
 - Redis caching for frequently accessed data
-
 ## Development
-
+## Development
 To run in development mode with hot reload, install [Fresh](https://github.com/gravityblast/fresh) and run:
-
+To run in development mode with hot reload, install [Fresh](https://github.com/gravityblast/fresh) and run:
 ```
+```sh
 fresh
 ```
-
 ## API Documentation
-
-For detailed API documentation, please refer to the API documentation (not included in this repository).
+## API Documentation
+For detailed API documentation, please refer to the API documentation (not included in this repository).For detailed API documentation, please refer to the API documentation (not included in this repository).
